@@ -28,7 +28,7 @@ class SampAlg:
         self.nsamples=nsamples
 
         os.chdir("..")
-        outputpath= 'output'
+        outputpath= 'results'
         if os.path.isdir(outputpath)==False:
             print(outputpath ,"directory doesnot exist, creating one to save the output")
             os.mkdir(outputpath)
