@@ -1,9 +1,9 @@
 import numpy as np
 import sys
 from constraints import *
-from sampleralgorithm import *
 from metropolis import Metropolis
 from SMC import SMC
+import time
 
 if __name__ == '__main__':
 

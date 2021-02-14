@@ -37,19 +37,19 @@ class SMC(BaseClass):
         self.ESSfract=0.5
         self.tauThres=1e6
         self.NSMC_MCMC=5
-
+        self.nsamples=int(self.nsamples/(self.NSMC_MCMC*0.25))
 
     def sample(self):
         """
         Function to call the sampling method of choice and plot results
         """
-        print("Samplong using sequential monte carlo")
+        print("Sampling using sequential monte carlo")
         qsamples,ntot,naccept=self.SMCsampler()
 
-        super(SMC, self).printoutput(ntot,naccept,naccept/ntot)
+        super(SMC, self).printoutput(qsamples,ntot,naccept,naccept/ntot)
         super(SMC, self).plotsamples(qsamples,self.method)
         super(SMC, self).savesamples(qsamples,self.method)
-        return
+        return naccept,naccept/ntot
 
     def SMCsampler(self):        
         """
@@ -65,6 +65,8 @@ class SMC(BaseClass):
 
         allaccepts_qs=[]
         tcount=0
+        Var=copy.deepcopy(self.Vstart)
+        VarR=copy.deepcopy(Var)
 
         print("-------------------------------------")
         while tau < self.tauThres:
@@ -74,7 +76,7 @@ class SMC(BaseClass):
             W=W/np.sum(W)
 
             qprtls,W=self.resampling(qprtls,W)
-            Var,VarR=self.calSMCvar(qprtls,W)
+            Var,VarR=self.calSMCvar(qprtls,W,Var,VarR)
             EFF_prtls=np.unique(qprtls,axis=1).shape[1]
 
             iacceptall=0
@@ -85,18 +87,19 @@ class SMC(BaseClass):
                     iacceptall=iacceptall+iaccept
                     allaccepts_qs=allaccepts_qs+allaccepts_dum
                 allaccepts_qs=np.asarray(allaccepts_qs)
-                allaccepts_qs=np.unique(allaccepts_qs,axis=1).T
-                EFF_prtls=allaccepts_qs.shape[1]
+                EFF_prtls=np.unique(allaccepts_qs,axis=0).shape[0]
                 print("tau:",tau,"Accept. Ratio:",iacceptall/(self.nsamples*self.NSMC_MCMC),"ESS:",ESSeff,"Eff. particles:",EFF_prtls)
             else:
                 for i in range(0,self.nsamples):
+                    # qprtls[:,i],iaccept,allaccepts_dum=self.SMCRW(tau,qprtls[:,i],Var,VarR)
                     qprtls[:,i],iaccept,_=self.GibbsSampler(tau,qprtls[:,i],Var,VarR)
                     iacceptall=iacceptall+iaccept
                 print("tau:",tau,"Accept. Ratio:",iacceptall/(self.nsamples*self.NSMC_MCMC),"ESS:",ESSeff,"Eff. particles:",EFF_prtls)
         print("-------------------------------------")
 
         ntot=(self.nsamples*self.NSMC_MCMC)*tcount
-        return allaccepts_qs.T,ntot,allaccepts_qs.shape[1]
+
+        return allaccepts_qs,ntot,EFF_prtls
 
     def find_tau(self,qprtls,tauL,tauU,deltatau=1.0,Niter=100):        
         """
@@ -202,13 +205,17 @@ class SMC(BaseClass):
             u=u+1.0/self.nsamples
         W=np.ones(self.nsamples)/self.nsamples
         return qprtlsnew,W
-    
-    def calSMCvar(self,qprtls,W):
+
+    def calSMCvar(self,qprtls,W,Varold,VarRold):
 
         qmean=np.reshape(np.mean(qprtls,axis=1),(-1,1))
         Var=(qprtls-qmean)   
         Var=np.dot(Var,Var.T)/qprtls.shape[1]
-        VarR = np.linalg.cholesky(Var)
+        try:
+            VarR = np.linalg.cholesky(Var)
+        except:
+            VarR=copy.deepcopy(VarRold)
+            Var=copy.deepcopy(Varold)
 
         return Var,VarR
 

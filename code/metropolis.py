@@ -48,10 +48,13 @@ class Metropolis(BaseClass):
             print("Wrong choice of method for sampler algorithm")
             sys.exit(1)
         
-        super(Metropolis, self).printoutput(ntot,naccept,naccept/ntot)
+        print(type(qsamples))
+        
+        super(Metropolis, self).printoutput(qsamples,ntot,naccept,naccept/ntot)
         super(Metropolis, self).plotsamples(qsamples,self.method)
         super(Metropolis, self).savesamples(qsamples,self.method)
-        return
+
+        return naccept,naccept/ntot
 
     def RandomWalk(self):        
         """
@@ -140,6 +143,7 @@ class Metropolis(BaseClass):
                 except:
                     self.Vstart=copy.deepcopy(Vold)
         pbar.close()
+        qsamples=np.asarray(qsamples)
         return qsamples,iaccept+ireject,iaccept
 
     def objF(self,qval):

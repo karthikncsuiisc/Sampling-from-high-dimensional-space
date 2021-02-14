@@ -13,7 +13,7 @@ class BaseClass:
     """Class for different sampling algorithms"""
 
     def __init__(self,model,qstart,qlims,nsamples,output_file="samples.txt",
-                     printoutput=True,plotfigures=True,saveoutputfile=True):
+                        printoutput=True,plotfigures=True,saveoutputfile=True):
         """
         Construct an object from sampling method
 
@@ -24,7 +24,6 @@ class BaseClass:
         method: Choice of method for sampling
         output_file: File name to save the samples
         """
-
         self.model=model
         self.qstart=np.reshape(np.asarray(qstart),(-1,1))
         self.qlims=qlims
@@ -43,14 +42,29 @@ class BaseClass:
         self.outputpath="../"+outputpath+"/"
         self.output_file=self.outputpath+output_file
 
-    def printoutput(self,ntot,neff,accpt_ratio):
+    def printoutput(self,qsamples,ntot,neff,accpt_ratio):
+        
         """
         Function to call the sampling method of choice and plot results
-        """        
+        """
         if self.printoutput:
             print("Total generated samples:",ntot)
             print("Total effective samples:",int(neff))
             print('Acceptance ratio:',accpt_ratio)
+        
+        self.testsamples(qsamples)
+
+    def testsamples(self,qsamples):
+
+        testinds=np.random.randint(qsamples.shape[0],size=100)
+        print("---------Testing the generated samples randomly for",len(testinds),"samples---------")
+        for ind in testinds:
+            testval=self.model.apply(list(qsamples[ind,:]))
+            if not testval:
+                print("Sampling failed for sample number:",ind)
+                print(self.model.apply_eval(list(qsamples[ind,:])))
+                sys.exit()
+        print("---------Testing successful---------")
         return
 
     def plotsamples(self,qsamples,method):
@@ -58,7 +72,7 @@ class BaseClass:
         Function for plotting the samples
         """
         if self.plotfigures:
-            filname=self.output_file[:-4]+"_"+self.method+".png"
+            filname=self.output_file[:-4]+".png"
             print("Plots saved to the folder:",filname)
             fig=sns.pairplot(pd.DataFrame(qsamples), markers='o')
             fig.savefig(filname)
@@ -71,7 +85,7 @@ class BaseClass:
         Function for saving the samples
         """
         if self.saveoutputfile:
-            filname=self.output_file[:-4]+"_"+self.method+".txt"
+            filname=self.output_file[:-4]+".txt"
             print("Saving samples to the folder:",filname)
             np.savetxt(filname,qsamples)
         else:
