@@ -2,8 +2,12 @@ import numpy as np
 import sys
 from constraints import *
 from sampleralgorithm import *
+from metropolis import Metropolis
+from SMC import SMC
 
 if __name__ == '__main__':
+
+    start_time=time.time()
 
     input_file=sys.argv[1]
     output_file=sys.argv[2]
@@ -11,34 +15,38 @@ if __name__ == '__main__':
     try:
         method=sys.argv[4]
     except:
-        method="AdaptiveMetropolis"
+        method="SMC"
 
     print("Input file:",input_file)
     print("Output file:",output_file)
     print("n_results",n_results)
-    print("Sampling method:",method)
 
     constrains=Constraint(input_file)
     qstart=constrains.get_example()
     qlims=np.zeros((len(qstart),2))
     qlims[:,1]=1.0
 
-# # example paper
-#     qlims[0,0]=0.6
-#     qlims[0,1]=2.0
-#     qlims[1,0]=-0.5
-#     qlims[1,1]=0.5
+    if method=="SMC":
+        sampling=SMC(model=constrains,
+                        qstart=constrains.get_example(),
+                        qlims=qlims,
+                        nsamples=int(n_results),
+                        output_file=output_file,
+                        plotfigures=True,
+                        saveoutputfile=True)
+    elif method=="Metropolis" or method=="AdaptiveMetropolis":
+        sampling=Metropolis(model=constrains,
+                        qstart=constrains.get_example(),
+                        qlims=qlims,
+                        nsamples=int(n_results),
+                        output_file=output_file,
+                        method=method,
+                        plotfigures=True,
+                        saveoutputfile=True)
+    else:
+        print("Wrong choice of method for sampler algorithm")
+        sys.exit(1)
 
-
-    sampling=SampAlg(model=constrains,
-                     qstart=constrains.get_example(),
-                    #  qstart=[0.3,0.3],
-                     qlims=qlims,
-                     nsamples=int(n_results),
-                     output_file=output_file,
-                     method=method,
-                     plotfigures=True,
-                     saveoutputfile=True)
     sampling.sample()
-
-
+    comp_time=time.time()-start_time
+    print("Computational time:",comp_time)
