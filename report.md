@@ -19,12 +19,12 @@ constrained domain are shown below.
 The following four methods are implemented to sample from any number of
 nonlinear constraints and the final samples generated are compared:
 
-1.  [Metropolis-Hastings Random
-    Walk](https://arxiv.org/pdf/1504.01896.pdf)
-2.  [Adaptive
-    Metropolis](https://projecteuclid.org/journals/bernoulli/volume-7/issue-2/An-adaptive-Metropolis-algorithm/bj/1080222083.full)
-3.  [Gibbs
-    Sampler](https://www.tandfonline.com/doi/abs/10.1080/00031305.1992.10475878)
+1.  [Metropolis-Hastings Random Walk
+    (Metropolis)](https://arxiv.org/pdf/1504.01896.pdf)
+2.  [Adaptive Metropolis
+    (AdaptiveMetropolis)](https://projecteuclid.org/journals/bernoulli/volume-7/issue-2/An-adaptive-Metropolis-algorithm/bj/1080222083.full)
+3.  [Gibbs Sampler
+    (Gibbs)](https://www.tandfonline.com/doi/abs/10.1080/00031305.1992.10475878)
 4.  [Sequential Monte Carlo (SMC)](https://arxiv.org/abs/1512.07328)
 
 ### 1. Metropolis-Hasting Random Walk
@@ -94,19 +94,19 @@ methods used as the MCMC step
 The program is tested on four cases and results are shown below using
 SMC. The input files for the examples are in the code folder.
 
-2. Mixture
+1.  Mixture
 
 ![mixture\_SMC](results/mixture_SMC.png)
 
-2. Example
+1.  Example
 
 ![Example\_SMC](results/example_SMC.png)
 
-3. Formulation
+1.  Formulation
 
 ![Formulation\_SMC](results/formulation_SMC.png)
 
-4. Alloy
+1.  Alloy
 
 ![Allow\_SMC](results/alloy_SMC.png)
 
