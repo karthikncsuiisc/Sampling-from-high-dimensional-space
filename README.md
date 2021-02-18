@@ -9,9 +9,9 @@ Python program for sampling from high dimensional space with complex, non-linear
 
 The choice of the method can be provided as the input while running the program and choice are provided in the brackets
 
-### To use the Code:
+## To use the Code:
 
-#### Required python packages to run the code
+### Required python packages to run the code
 
 * numpy
 * matplotlib
@@ -19,7 +19,7 @@ The choice of the method can be provided as the input while running the program 
 * scipy
 * seaborn
 
-#### Input file format
+### Input file format
 
 ```
 #Dimension of the problem
@@ -30,7 +30,7 @@ The choice of the method can be provided as the input while running the program 
 1.0 - x[0] - x[1] >= 0.0
 ```
 
-#### To use the package
+### To use the package
 
 1. Paste the input file inside the code folder
 2. Open the terminal and go to the code colder
@@ -43,7 +43,7 @@ The choice of the method can be provided as the input while running the program 
 4. The optional method is provided as input at the end of the arguments. If the method is not mentioned, sequential Monte Carlo (SMC) will be selected as the default choice.
 5. The results and plots will be generated in the results folder
 
-#### Demo
+### Demo
 
 The program is integrated into the Django web framework to demonstrate the results and hosted on the Heroku server. Below is the link for the website to try out different options for sampling.
 
