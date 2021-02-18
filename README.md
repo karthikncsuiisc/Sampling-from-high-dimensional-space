@@ -51,5 +51,5 @@ The program is integrated into the Django web framework to demonstrate the resul
 
 Below is the link for the Git repository of the Django website.
 
-[Github code for Django Website](https://github.com/karthikncsu/Django-website-for-sampling-high-diemsnional-space)
+[Github code for Django Website](https://github.com/karthikncsu/Django-website-for-sampling-high-dimensional-space)
 
