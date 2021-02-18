@@ -16,7 +16,7 @@ if __name__ == '__main__':
     fout.write("----------------------------------------------------------------------------------------------------------------------------------------------\n")
 
     for filename in testing_files:
-        for method in ["SMC","AdaptiveMetropolis","Metropolis"]:
+        for method in ["SMC","AdaptiveMetropolis","Metropolis","Gibbs"]:
 
             if filename == "formulation.txt" and method == "Metropolis":
                 continue
@@ -44,7 +44,7 @@ if __name__ == '__main__':
                                 output_file=output_file[:-4]+"_"+method+".txt",
                                 plotfigures=True,
                                 saveoutputfile=True)
-            elif method=="Metropolis" or method=="AdaptiveMetropolis":
+            elif method=="Metropolis" or method=="AdaptiveMetropolis"or method=="Gibbs":
                 sampling=Metropolis(model=constrains,
                                 qstart=constrains.get_example(),
                                 qlims=qlims,
@@ -53,6 +53,9 @@ if __name__ == '__main__':
                                 method=method,
                                 plotfigures=True,
                                 saveoutputfile=True)
+            else:
+                print("wrong method used:",method)
+                sys.exit()
             naccept,acceptratio=sampling.sample()
             comp_time=time.time()-start_time
 

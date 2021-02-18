@@ -34,7 +34,7 @@ if __name__ == '__main__':
                         output_file=output_file,
                         plotfigures=True,
                         saveoutputfile=True)
-    elif method=="Metropolis" or method=="AdaptiveMetropolis":
+    elif method=="Metropolis" or method=="AdaptiveMetropolis" or method=="Gibbs":
         sampling=Metropolis(model=constrains,
                         qstart=constrains.get_example(),
                         qlims=qlims,

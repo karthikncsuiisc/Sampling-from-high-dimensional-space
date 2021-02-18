@@ -68,12 +68,13 @@ class SMC(BaseClass):
         Var=copy.deepcopy(self.Vstart)
         VarR=copy.deepcopy(Var)
 
-        print("-------------------------------------")
+        pbar = tqdm(total = 100)
+        count=0
+        countold=0
         while tau < self.tauThres:
             tcount=tcount+1
             tau,wnt,ESSeff=self.find_tau(qprtls,tauL=tau,tauU=self.tauThres)
-            W=W*wnt
-            W=W/np.sum(W)
+            W=W*wnt;    W=W/np.sum(W)
 
             qprtls,W=self.resampling(qprtls,W)
             Var,VarR=self.calSMCvar(qprtls,W,Var,VarR)
@@ -88,17 +89,17 @@ class SMC(BaseClass):
                     allaccepts_qs=allaccepts_qs+allaccepts_dum
                 allaccepts_qs=np.asarray(allaccepts_qs)
                 EFF_prtls=np.unique(allaccepts_qs,axis=0).shape[0]
-                print("tau:",tau,"Accept. Ratio:",iacceptall/(self.nsamples*self.NSMC_MCMC),"ESS:",ESSeff,"Eff. particles:",EFF_prtls)
             else:
                 for i in range(0,self.nsamples):
                     # qprtls[:,i],iaccept,allaccepts_dum=self.SMCRW(tau,qprtls[:,i],Var,VarR)
                     qprtls[:,i],iaccept,_=self.GibbsSampler(tau,qprtls[:,i],Var,VarR)
                     iacceptall=iacceptall+iaccept
-                print("tau:",tau,"Accept. Ratio:",iacceptall/(self.nsamples*self.NSMC_MCMC),"ESS:",ESSeff,"Eff. particles:",EFF_prtls)
-        print("-------------------------------------")
+            
+            count=np.abs(int(np.log10(tau)*100/6))
+            pbar.update(count-countold)
+            countold=copy.deepcopy(count)
 
         ntot=(self.nsamples*self.NSMC_MCMC)*tcount
-
         return allaccepts_qs,ntot,EFF_prtls
 
     def find_tau(self,qprtls,tauL,tauU,deltatau=1.0,Niter=100):        
@@ -153,6 +154,7 @@ class SMC(BaseClass):
         """
         Function for evaluatinng the target distribution for sequential monte carlo
         𝜋(𝑥) = 𝜙(𝜏𝐶1(𝑥)) * 𝜙(𝜏𝐶2(𝑥)) * .... * 𝜙(𝜏𝐶k(𝑥)) 
+        for all particles
 
         Return:
             pit: returns
@@ -162,12 +164,13 @@ class SMC(BaseClass):
             pitall.append(self.pitfun(tau,qprtls[:,i]))
         pitall=np.asarray(pitall)
 
-        return pitall 
+        return pitall
 
     def pitfun(self,tau,qval):        
         """
         Function for evaluatinng the target distribution for sequential monte carlo
         𝜋(𝑥) = 𝜙(𝜏𝐶1(𝑥)) * 𝜙(𝜏𝐶2(𝑥)) * .... * 𝜙(𝜏𝐶k(𝑥)) 
+        for single particle
 
         Return:
             pit: returns
@@ -175,7 +178,6 @@ class SMC(BaseClass):
         Call= self.model.apply_eval(list(qval))       
         Call=Call+list(qval-self.qlims[:,0])
         Call=Call+list(-qval+self.qlims[:,1])
-
 
         pit=tau*np.asarray(Call)
         pit=norm.cdf(pit)
@@ -251,7 +253,7 @@ class SMC(BaseClass):
 
         return qval[:,0],iaccept,accepted_qs
 
-    def GibbsSampler(self,tau,qval,Var,VarR):        
+    def GibbsSampler(self,tau,qval,Var,VarR):
         """
         Function for sampling using gibs sampler for SMC
 

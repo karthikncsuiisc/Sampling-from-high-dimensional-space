@@ -44,6 +44,9 @@ class Metropolis(BaseClass):
         elif self.method=="AdaptiveMetropolis":
             print("Sampling using adaptive metropolis")
             qsamples,ntot,naccept=self.AdaptiveMetropolis()
+        elif self.method=="Gibbs":
+            print("Sampling using Gibbs sampler")
+            qsamples,ntot,naccept=self.Gibbs()
         else:
             print("Wrong choice of method for sampler algorithm")
             sys.exit(1)
@@ -145,6 +148,69 @@ class Metropolis(BaseClass):
         pbar.close()
         qsamples=np.asarray(qsamples)
         return qsamples,iaccept+ireject,iaccept
+
+    def Gibbs(self):        
+        """
+        Function for sampling using gibbs sampler
+
+        Return:
+            Q_MCMC: Accepted samples
+        """
+        print("adaption interval:",self.adapt_interval)
+        R = np.linalg.cholesky(self.Vstart);
+        Vold=copy.deepcopy(self.Vstart)
+        q_old =self.qstart;
+        qsamples=[list(q_old[:,0])];
+        iaccept=0
+        ireject=0
+
+        #Adaptive metropoils parameters
+        qmean=copy.deepcopy(q_old)
+        qmean_old=copy.deepcopy(q_old)
+        adptintnew=1
+
+        pbar = tqdm(total = self.nsamples)        
+        while iaccept<self.nsamples:
+
+            ind=np.random.randint(q_old.shape[0],size=1)
+            q_new=copy.deepcopy(q_old)
+            q_new[ind,0]=q_old[ind,0]+np.sqrt(self.Vstart[ind,ind])*np.random.randn()
+            output=self.objF(q_new[:,0])
+
+            if output:
+                k=copy.deepcopy(iaccept)+1               
+
+                #update variance and qmean
+                Vupdate=k*np.dot(qmean_old,qmean_old.T)
+                Vupdate=Vupdate-(k+1)*np.dot(qmean,qmean.T)
+                Vupdate=Vupdate+np.dot(q_new,q_new.T)
+                Vupdate=Vupdate+np.eye(len(q_new))*1e-16
+                Vupdate=self.sp/k*Vupdate
+
+                Vold=copy.deepcopy(self.Vstart)
+                self.Vstart=(k-1.0)/k*self.Vstart+Vupdate
+                qmean_old=copy.deepcopy(qmean)
+                qmean=k*qmean/(k+1)+q_old/(k+1)
+
+                q_old=copy.deepcopy(q_new)
+                qsamples.append(list(q_old[:,0]))
+                iaccept=iaccept+1
+                pbar.update(1)
+            else:
+                ireject=ireject+1
+           
+            adptintnew=norm.cdf(iaccept/self.adapt_interval,0.5,0.2)*self.adapt_interval
+            adptintnew=int(max(1.0,adptintnew))
+
+            if np.mod(iaccept,adptintnew)==0:
+                try:
+                    R = np.linalg.cholesky(self.Vstart)
+                except:
+                    self.Vstart=copy.deepcopy(Vold)
+        pbar.close()
+        qsamples=np.asarray(qsamples)
+        return qsamples,iaccept+ireject,iaccept
+
 
     def objF(self,qval):
         output=np.all(qval>=self.qlims[:,0]) and np.all(qval<=self.qlims[:,1]) and self.model.apply(list(qval))

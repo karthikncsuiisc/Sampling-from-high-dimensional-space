@@ -58,13 +58,16 @@ class BaseClass:
 
         testinds=np.random.randint(qsamples.shape[0],size=100)
         print("---------Testing the generated samples randomly for",len(testinds),"samples---------")
+        totfailed=0
         for ind in testinds:
             testval=self.model.apply(list(qsamples[ind,:]))
-            if not testval:
+            testfunval=self.model.apply_eval(list(qsamples[ind,:]))
+            if np.min(testfunval)<-1e-6:
                 print("Sampling failed for sample number:",ind)
+                print("Constrain values")
                 print(self.model.apply_eval(list(qsamples[ind,:])))
-                sys.exit()
-        print("---------Testing successful---------")
+                totfailed=totfailed+1
+        print("Total failed:",totfailed)
         return
 
     def plotsamples(self,qsamples,method):
