@@ -64,7 +64,7 @@ The program is tested on four cases and results are shown below using SMC. The i
 
 4. Alloy
 
-![Allow_SMC](results/Alloy_SMC.png)
+![Allow_SMC](results/alloy_SMC.png)
 
 The below figure shows the computational time for different examples for generating 5000 samples. For the first three examples, all the methods generated similar structures of samples and for alloy, the adaptive metropolis was not able to generate any samples.
 

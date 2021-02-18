@@ -108,7 +108,7 @@ SMC. The input files for the examples are in the code folder.
 
 1.  Alloy
 
-![Allow\_SMC](results/Alloy_SMC.png)
+![Allow\_SMC](results/alloy_SMC.png)
 
 The below figure shows the computational time for different examples for
 generating 5000 samples. For the first three examples, all the methods
