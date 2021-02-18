@@ -22,7 +22,7 @@ The choice of the method can be provided as the input while running the program 
 #### Input file format
 
 ```
-#Dimesnion of the problem
+#Dimension of the problem
 2
 #Initial starting point
 0.0 0.0
@@ -38,7 +38,7 @@ The choice of the method can be provided as the input while running the program 
 
       ``` python sampler.py <input file> <output file> <nsamples> <method: optional> ```
   
-  Eg: ```python sampler.py mixture.txt mixture_out.txt 1000 SMC```
+      Eg: ```python sampler.py mixture.txt mixture_out.txt 1000 SMC```
 
 4. The optional method is provided as input at the end of the arguments. If the method is not mentioned, sequential Monte Carlo (SMC) will be selected as the default choice.
 5. The results and plots will be generated in the results folder
