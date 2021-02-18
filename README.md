@@ -42,3 +42,14 @@ The choice of the method can be provided as the input while running the program 
 
 4. The optional method is provided as input at the end of the arguments. If the method is not mentioned, sequential Monte Carlo (SMC) will be selected as the default choice.
 5. The results and plots will be generated in the results folder
+
+#### Demo
+
+The program is integrated into the Django web framework to demonstrate the results and hosted on the Heroku server. Below is the link for the website to try out different options for sampling.
+
+[Django Website](https://sheltered-eyrie-03969.herokuapp.com/)
+
+Below is the link for the Git repository of the Django website.
+
+[Github code for Django Website](https://github.com/karthikncsu/Django-website-for-sampling-high-diemsnional-space)
+
