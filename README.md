@@ -32,7 +32,7 @@ The choice of the method can be provided as the input while running the program 
 
 ### To use the package
 
-1. Paste the input file inside the code folder
+1. Paste the input file inside the code folder. Sample input files are in the code directory.
 2. Open the terminal and go to the code colder
 3. To sample from the space with the nonlinear constraints, run below arguments
 
