@@ -94,19 +94,19 @@ methods used as the MCMC step
 The program is tested on four cases and results are shown below using
 SMC. The input files for the examples are in the code folder.
 
-1.  Mixture
+2. Mixture
 
 ![mixture\_SMC](results/mixture_SMC.png)
 
-1.  Example
+2. Example
 
 ![Example\_SMC](results/example_SMC.png)
 
-1.  Formulation
+3. Formulation
 
 ![Formulation\_SMC](results/formulation_SMC.png)
 
-1.  Alloy
+4. Alloy
 
 ![Allow\_SMC](results/alloy_SMC.png)
 
