@@ -19,9 +19,9 @@ here ***x*** is an n-dimensional vector. Each dimension is normalized to one and
 
 The following four methods are implemented to sample from any number of nonlinear constraints and the final samples generated are compared:
 
-1. [Metropolis-Hastings Random Walk](https://arxiv.org/pdf/1504.01896.pdf)
-2. [Adaptive Metropolis](https://projecteuclid.org/journals/bernoulli/volume-7/issue-2/An-adaptive-Metropolis-algorithm/bj/1080222083.full)
-3. [Gibbs Sampler](https://www.tandfonline.com/doi/abs/10.1080/00031305.1992.10475878)
+1. [Metropolis-Hastings Random Walk (Metropolis)](https://arxiv.org/pdf/1504.01896.pdf)
+2. [Adaptive Metropolis (AdaptiveMetropolis)](https://projecteuclid.org/journals/bernoulli/volume-7/issue-2/An-adaptive-Metropolis-algorithm/bj/1080222083.full)
+3. [Gibbs Sampler (Gibbs)](https://www.tandfonline.com/doi/abs/10.1080/00031305.1992.10475878)
 4. [Sequential Monte Carlo (SMC)](https://arxiv.org/abs/1512.07328)
 
 ### 1. Metropolis-Hasting Random Walk
