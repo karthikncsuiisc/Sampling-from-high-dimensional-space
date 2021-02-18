@@ -49,6 +49,8 @@ The program is integrated into the Django web framework to demonstrate the resul
 
 [Django Website](https://sheltered-eyrie-03969.herokuapp.com/)
 
+Due to the limitations with the Heroku free server, the cases with a computational time of more than 30 seconds give a time-out error.  The issue will be resolved in the future and the website can be used to solve any case. In the mean while, please try other cases.
+
 Below is the link for the Git repository of the Django website.
 
 [Github code for Django Website](https://github.com/karthikncsu/Django-website-for-sampling-high-dimensional-space)
