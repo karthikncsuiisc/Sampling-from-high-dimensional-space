@@ -50,7 +50,7 @@ k0=100 accepted samples.
 ### 3. Gibbs Sampler
 
 The Gibbs is similar to adaptive Metropolis but the samples are
-generated samples in one dimension at a time.
+generated in one dimension at a time.
 
 ### 4. Sequential Monte Carlo
 
