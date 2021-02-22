@@ -7,7 +7,7 @@ Python program for sampling from high dimensional space with complex, non-linear
 3) Adaptive Metropolis (AdaptiveMetropolis)
 4) Metropolis Random Walk (Metropolis)
 
-The choice of the method can be provided as the input while running the program and choice name to be used at the command line are provided in the brackets. Please refer to the report for more information.
+The choice of the method can be provided as the input while running the program and choice name to be used at the command line are provided in the brackets. Please refer to the [report](https://github.com/karthikncsu/Sampling-from-high-dimensional-space/blob/main/report.md) for more information.
 
 ## To use the Code:
 
