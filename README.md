@@ -18,6 +18,7 @@ The choice of the method can be provided as the input while running the program 
 * tqdm
 * scipy
 * seaborn
+* mpi4py
 
 ### Input file format
 
@@ -36,9 +37,10 @@ The choice of the method can be provided as the input while running the program 
 2. Open the terminal and go to the code colder
 3. To sample from the space with the nonlinear constraints, run below arguments
 
-      ``` python sampler.py <input file> <output file> <nsamples> <method: optional> ```
+      ``` cd code ```
+      ``` mpirun -np <number of processors> python sampler.py <input file> <output file> <nsamples> <method: optional> ```
   
-      Eg: ```python sampler.py mixture.txt mixture_out.txt 1000 SMC```
+      Eg: ```mpirun -np 4 python sampler.py mixture.txt mixture_out.txt 1000 SMC```
 
 4. The optional method is provided as input at the end of the arguments. If the method is not mentioned, sequential Monte Carlo (SMC) will be selected as the default choice.
 5. The results and plots will be generated in the results folder
