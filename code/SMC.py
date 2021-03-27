@@ -164,7 +164,7 @@ class SMC(BaseClass):
 
         wnt_all=self.comm.gather(wnt,root=0)
         if self.myrank==0:
-            wnt_all=np.vstack(wnt_all)
+            wnt_all=np.hstack(wnt_all)
             ESS=(np.sum(wnt_all))**2/(np.sum(wnt_all**2)+1e-16)
         else:
             ESS=None
