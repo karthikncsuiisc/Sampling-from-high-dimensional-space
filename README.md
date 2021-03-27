@@ -37,8 +37,10 @@ The choice of the method can be provided as the input while running the program 
 2. Open the terminal and go to the code colder
 3. To sample from the space with the nonlinear constraints, run below arguments
 
-      ``` cd code 
-      mpirun -np <number of processors> python sampler.py <input file> <output file> <nsamples> <method: optional> ```
+      ``` 
+      cd code 
+      mpirun -np <number of processors> python sampler.py <input file> <output file> <nsamples> <method: optional> 
+      ```
   
       Eg: ```mpirun -np 4 python sampler.py mixture.txt mixture_out.txt 1000 SMC```
 
