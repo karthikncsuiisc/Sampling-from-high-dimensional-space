@@ -9,6 +9,7 @@ import time
 import seaborn as sns
 import pandas as pd
 from baseclass import BaseClass
+from mpi4py import MPI
 
 class SMC(BaseClass):
     """Class for different sampling algorithms"""
@@ -39,16 +40,23 @@ class SMC(BaseClass):
         self.NSMC_MCMC=3
         # self.nsamples=self.nsamples
 
+        self.comm = MPI.COMM_WORLD
+        self.myrank = self.comm.Get_rank()
+        self.size=self.comm.size
+
     def sample(self):
         """
         Function to call the sampling method of choice and plot results
         """
-        print("Sampling using sequential monte carlo")
+        if self.myrank==0:
+            print("Sampling using sequential monte carlo")
         qsamples,ntot,naccept=self.SMCsampler()
 
-        super(SMC, self).printoutput(qsamples,ntot,naccept,naccept/ntot)
-        super(SMC, self).plotsamples(qsamples,self.method)
-        super(SMC, self).savesamples(qsamples,self.method)
+        if self.myrank==0:
+            super(SMC, self).printoutput(qsamples,ntot,naccept,naccept/ntot)
+            super(SMC, self).plotsamples(qsamples,self.method)
+            super(SMC, self).savesamples(qsamples,self.method)
+
         return naccept,naccept/ntot
 
     def SMCsampler(self):        
@@ -59,48 +67,88 @@ class SMC(BaseClass):
             Q_MCMC: final samples
         """
         tau=0;
-        qprtls=np.random.rand(self.qlims.shape[0],self.nsamples)
-        qprtls=np.reshape(self.qlims[:,0],(-1,1))+(np.reshape(self.qlims[:,1],(-1,1))-np.reshape(self.qlims[:,0],(-1,1)))*qprtls[:,:]
-        W=np.ones(self.nsamples)*1/self.nsamples
-
-        allaccepts_qs=[]
         tcount=0
-        Var=copy.deepcopy(self.Vstart)
-        VarR=copy.deepcopy(Var)
+        allaccepts_qs=[]
 
-        pbar = tqdm(total = 100)
-        count=0
-        countold=0
+        if self.myrank==0:
+            qprtls=np.random.rand(self.qlims.shape[0],self.nsamples)
+            qprtls=np.reshape(self.qlims[:,0],(-1,1))+(np.reshape(self.qlims[:,1],(-1,1))-np.reshape(self.qlims[:,0],(-1,1)))*qprtls[:,:]
+
+            Var=copy.deepcopy(self.Vstart)
+            VarR=copy.deepcopy(Var)
+            W=np.ones(self.nsamples)*1/self.nsamples
+
+            pbar = tqdm(total = 100)
+            count=0
+            countold=0
+        else:
+            qprtls=None
+
         while tau < self.tauThres:
-            tcount=tcount+1
-            tau,wnt,ESSeff=self.find_tau(qprtls,tauL=tau,tauU=self.tauThres)
-            W=W*wnt;    W=W/np.sum(W)
 
-            qprtls,W=self.resampling(qprtls,W)
-            Var,VarR=self.calSMCvar(qprtls,W,Var,VarR)
-            EFF_prtls=np.unique(qprtls,axis=1).shape[1]
+            tcount=tcount+1         
+            partitions=self.distributor(qprtls)          
+            qprtls_div=self.comm.scatter(partitions,root=0)
+
+            tau,wnt,ESSeff=self.find_tau(qprtls_div,tauL=tau,tauU=self.tauThres)
+            wnt_all=self.comm.gather(wnt,root=0)
+
+            if self.myrank==0:
+                wnt_all=np.hstack(wnt_all)
+                W=W*wnt_all;    W=W/np.sum(W)
+                qprtls,W=self.resampling(qprtls,W)
+                Var,VarR=self.calSMCvar(qprtls,W,Var,VarR)
+            else:
+                Var=None; VarR=None
+
+            partitions=self.distributor(qprtls)          
+            qprtls_div=self.comm.scatter(partitions,root=0)
+            Var=self.comm.bcast(Var,root=0)
+            VarR=self.comm.bcast(VarR,root=0)
 
             iacceptall=0
             if np.abs(tau-self.tauThres)/self.tauThres<1e-3:
-                for i in range(0,self.nsamples):
+                for i in range(0,qprtls_div.shape[1]):
                     # qprtls[:,i],iaccept,allaccepts_dum=self.SMCRW(tau,qprtls[:,i],Var,VarR)
-                    qprtls[:,i],iaccept,allaccepts_dum=self.GibbsSampler(tau,qprtls[:,i],Var,VarR)
+                    qprtls_div[:,i],iaccept,allaccepts_dum=self.GibbsSampler(tau,qprtls_div[:,i],Var,VarR)
                     iacceptall=iacceptall+iaccept
                     allaccepts_qs=allaccepts_qs+allaccepts_dum
                 allaccepts_qs=np.asarray(allaccepts_qs)
-                EFF_prtls=np.unique(allaccepts_qs,axis=0).shape[0]
+                allaccepts_qs=self.comm.gather(allaccepts_qs,root=0)
+
+                if self.myrank==0:
+                    allaccepts_qs=np.vstack(allaccepts_qs)
+                    EFF_prtls=np.unique(allaccepts_qs,axis=0).shape[0]
+                else:
+                    EFF_prtls=1
             else:
-                for i in range(0,self.nsamples):
+                for i in range(0,qprtls_div.shape[1]):
                     # qprtls[:,i],iaccept,allaccepts_dum=self.SMCRW(tau,qprtls[:,i],Var,VarR)
-                    qprtls[:,i],iaccept,_=self.GibbsSampler(tau,qprtls[:,i],Var,VarR)
-                    iacceptall=iacceptall+iaccept
-            
-            count=np.abs(int(np.log10(tau)*100/6))
-            pbar.update(count-countold)
-            countold=copy.deepcopy(count)
+                    qprtls_div[:,i],iaccept,_=self.GibbsSampler(tau,qprtls_div[:,i],Var,VarR)
+                    iacceptall=iacceptall+iaccept               
+
+            qprtls=self.comm.gather(qprtls_div,root=0)
+            if self.myrank==0:
+                qprtls=np.hstack(qprtls)
+
+            if self.myrank==0:            
+                count=np.abs(int(np.log10(tau)*100/6))
+                pbar.update(count-countold)
+                countold=copy.deepcopy(count)
 
         ntot=(self.nsamples*self.NSMC_MCMC)*tcount
         return allaccepts_qs,ntot,EFF_prtls
+    
+    def distributor(self,qprtls):
+
+        if self.myrank==0:
+            partitions=[]
+            for prtls in np.array_split(np.arange(0,self.nsamples),self.size,axis=0):
+                partitions.append(qprtls[:,prtls])
+        else:
+            partitions=[]
+        
+        return partitions
 
     def find_tau(self,qprtls,tauL,tauU,deltatau=1.0,Niter=100):        
         """
@@ -109,21 +157,39 @@ class SMC(BaseClass):
         Return:
             tau: returns
         """
-        pitallminus=self.pitallfun(tauL,qprtls)
 
+        pitallminus=self.pitallfun(tauL,qprtls)
         funL=1.0-self.ESSfract
-        ESS,wnt=self.ESSfun(tauU,qprtls,pitallminus)
-        funU=ESS/qprtls.shape[1]-self.ESSfract
+        wnt=self.ESSfun(tauU,qprtls,pitallminus)
+
+        wnt_all=self.comm.gather(wnt,root=0)
+        if self.myrank==0:
+            wnt_all=np.vstack(wnt_all)
+            ESS=(np.sum(wnt_all))**2/(np.sum(wnt_all**2)+1e-16)
+        else:
+            ESS=None
+        ESS=self.comm.bcast(ESS,root=0)
+
+        funU=ESS/self.nsamples-self.ESSfract
         fact=1.0
+
         if funU>=0.0:
-            return tauU,wnt,ESS/qprtls.shape[1]
+            return tauU,wnt,ESS/self.nsamples
 
         for iter in np.arange(0,Niter):
 
             taunew=tauL+fact*deltatau
-            ESS,wnt=self.ESSfun(taunew,qprtls,pitallminus)
-            funnew=ESS/qprtls.shape[1]-self.ESSfract
+            wnt=self.ESSfun(taunew,qprtls,pitallminus)
 
+            wnt_all=self.comm.gather(wnt,root=0)
+            if self.myrank==0:
+                wnt_all=np.hstack(wnt_all)
+                ESS=(np.sum(wnt_all))**2/(np.sum(wnt_all**2)+1e-16)
+            else:
+                ESS=None
+            ESS=self.comm.bcast(ESS,root=0)
+
+            funnew=ESS/self.nsamples-self.ESSfract
             if funnew<0:
                 fact=fact/2.0
                 tauU=copy.deepcopy(taunew)
@@ -136,7 +202,8 @@ class SMC(BaseClass):
             if np.abs(funnew)<1e-3:
                 break
         
-        return taunew,wnt,ESS/qprtls.shape[1]
+
+        return taunew,wnt,ESS/self.nsamples
     
     def ESSfun(self,tau,qprtls,pitallminus):
         """
@@ -147,8 +214,9 @@ class SMC(BaseClass):
         """
         pitall=self.pitallfun(tau,qprtls)
         wnt=pitall/(pitallminus+1e-16)
-        ESS=(np.sum(wnt))**2/(np.sum(wnt**2)+1e-16)
-        return ESS,wnt
+        # ESS=(np.sum(wnt))**2/(np.sum(wnt**2)+1e-16)
+        # return ESS,wnt
+        return wnt
 
     def pitallfun(self,tau,qprtls):        
         """
@@ -198,6 +266,7 @@ class SMC(BaseClass):
         isavejend=0
         sumW=W[j]
         u=np.random.rand()/self.nsamples
+
         for i in range(0,self.nsamples):
             while sumW<u:
                 j=j+1

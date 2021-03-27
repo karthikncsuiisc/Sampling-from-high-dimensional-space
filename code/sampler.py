@@ -4,8 +4,13 @@ from constraints import *
 from metropolis import Metropolis
 from SMC import SMC
 import time
+from mpi4py import MPI
 
 if __name__ == '__main__':
+
+    comm = MPI.COMM_WORLD
+    myrank = comm.Get_rank()
+    size = comm.size
 
     start_time=time.time()
 
@@ -16,10 +21,11 @@ if __name__ == '__main__':
         method=sys.argv[4]
     except:
         method="SMC"
-
-    print("Input file:",input_file)
-    print("Output file:",output_file)
-    print("n_results",n_results)
+    
+    if myrank==0:
+        print("Input file:",input_file)
+        print("Output file:",output_file)
+        print("n_results",n_results)
 
     constrains=Constraint(input_file)
     qstart=constrains.get_example()
@@ -34,19 +40,25 @@ if __name__ == '__main__':
                         output_file=output_file,
                         plotfigures=True,
                         saveoutputfile=True)
+        sampling.sample()
+
     elif method=="Metropolis" or method=="AdaptiveMetropolis" or method=="Gibbs":
-        sampling=Metropolis(model=constrains,
-                        qstart=constrains.get_example(),
-                        qlims=qlims,
-                        nsamples=int(n_results),
-                        output_file=output_file,
-                        method=method,
-                        plotfigures=True,
-                        saveoutputfile=True)
+        if myrank==0:
+            sampling=Metropolis(model=constrains,
+                            qstart=constrains.get_example(),
+                            qlims=qlims,
+                            nsamples=int(n_results),
+                            output_file=output_file,
+                            method=method,
+                            plotfigures=True,
+                            saveoutputfile=True)
+            sampling.sample()
+
     else:
-        print("Wrong choice of method for sampler algorithm")
+        if myrank==0:
+            print("Wrong choice of method for sampler algorithm")
         sys.exit(1)
 
-    sampling.sample()
     comp_time=time.time()-start_time
-    print("Computational time:",comp_time)
+    if myrank==0:
+        print("Computational time:",comp_time)
