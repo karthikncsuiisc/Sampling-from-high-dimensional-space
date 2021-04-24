@@ -61,4 +61,6 @@ if __name__ == '__main__':
 
     comp_time=time.time()-start_time
     if myrank==0:
-        print("Computational time:",comp_time)
+        print("Computational time:",comp_time)   
+        comp_array=np.array([[size,comp_time]])
+        np.savetxt("../results/comp_time.log",comp_array)
