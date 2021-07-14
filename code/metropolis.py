@@ -39,6 +39,8 @@ class Metropolis(BaseClass):
         self.myrank = self.comm.Get_rank()
         self.size=self.comm.size
 
+        self.nsamples=np.ceil(self.nsamples/self.size)
+
     def sample(self):
         """
         Function to call the sampling method of choice and plot results

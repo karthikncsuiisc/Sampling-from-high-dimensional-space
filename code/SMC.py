@@ -57,7 +57,7 @@ class SMC(BaseClass):
 
         if self.myrank==0:
             super(SMC, self).printoutput(qsamples,ntot,naccept,naccept/ntot,self.size,comp_time)
-            super(SMC, self).plotsamples(qsamples,self.method)
+            # super(SMC, self).plotsamples(qsamples,self.method)
             super(SMC, self).savesamples(qsamples,self.method)
 
         return naccept,naccept/ntot
@@ -134,7 +134,7 @@ class SMC(BaseClass):
                 pbar.update(count-countold)
                 countold=copy.deepcopy(count)
             
-            if tcount>500:
+            if tcount>5000:
                 print("Number of iterations are more than ",tcount)
 
                 for i in range(0,qprtls_div.shape[1]):
@@ -170,7 +170,7 @@ class SMC(BaseClass):
         
         return partitions
 
-    def find_tau(self,qprtls,tauL,tauU,deltatau=100.0,Niter=100):        
+    def find_tau(self,qprtls,tauL,tauU,deltatau=100.0,Niter=20):        
         """
         Function to find tau using ESS
 

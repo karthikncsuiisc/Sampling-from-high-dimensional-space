@@ -75,9 +75,10 @@ class BaseClass:
 
         qsamples=np.unique(qsamples,axis=0)
 
-        dum_mindist=self.mindist(qsamples)
-        dum_maxdist=self.maxdist(qsamples)
-        comp_array=np.array([[size,comp_time,dum_mindist,dum_maxdist]])
+        # dum_mindist=self.mindist(qsamples)
+        # dum_maxdist=self.maxdist(qsamples)
+        # comp_array=np.array([[size,comp_time,dum_mindist,dum_maxdist]])
+        comp_array=np.array([[size,comp_time]])
         np.savetxt("../results/comp_time.log",comp_array)
 
         if self.printoutput:
@@ -85,8 +86,8 @@ class BaseClass:
             print("Total effective samples:",int(neff))
             print('Acceptance ratio:',accpt_ratio)
             print("Computational time:",comp_time)
-            print("Min. distance:",dum_mindist)
-            print("Max. distance:",dum_maxdist)
+            # print("Min. distance:",dum_mindist)
+            # print("Max. distance:",dum_maxdist)
 
         self.testsamples(qsamples)
 
