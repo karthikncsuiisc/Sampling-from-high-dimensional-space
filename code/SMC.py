@@ -112,7 +112,7 @@ class SMC(BaseClass):
             VarR=self.comm.bcast(VarR,root=0)
 
             iacceptall=0
-            if np.abs(tau-self.tauThres)/self.tauThres<1e-3:
+            if tau>=self.tauThres:
                 for i in range(0,qprtls_div.shape[1]):
                     # qprtls[:,i],iaccept,allaccepts_dum=self.SMCRW(tau,qprtls[:,i],Var,VarR)
                     qprtls_div[:,i],iaccept,allaccepts_dum=self.GibbsSampler(tau,qprtls_div[:,i],Var,VarR)
@@ -130,8 +130,6 @@ class SMC(BaseClass):
             qprtls=self.comm.gather(qprtls_div,root=0)
             if self.myrank==0:
                 qprtls=np.hstack(qprtls)
-
-            if self.myrank==0:            
                 count=np.abs(int(np.log10(tau)*1000/6))
                 pbar.update(count-countold)
                 countold=copy.deepcopy(count)
@@ -153,6 +151,7 @@ class SMC(BaseClass):
             allaccepts_qs=np.vstack(allaccepts_qs)
             allaccepts_qs=np.unique(allaccepts_qs,axis=0)
             EFF_prtls=np.unique(allaccepts_qs,axis=0).shape[0]
+            print("Accepted samples:",allaccepts_qs.shape)
         else:
             EFF_prtls=1
 
@@ -179,19 +178,18 @@ class SMC(BaseClass):
             tau: returns
         """
 
-#------------------------manual tau
-        pitallminus=self.pitallfun(tauL,qprtls)
-        taunew=10**(np.log10(tauL+1e-16)+0.1)
-        print(taunew)
-        wnt=self.ESSfun(taunew,qprtls,pitallminus)
-        wnt_all=self.comm.gather(wnt,root=0)
-        if self.myrank==0:
-            wnt_all=np.hstack(wnt_all)
-            ESS=(np.sum(wnt_all))**2/(np.sum(wnt_all**2)+1e-16)
-        else:
-            ESS=None
-        ESS=self.comm.bcast(ESS,root=0)
-        return taunew,wnt,ESS/self.nsamples
+# #------------------------manual tau
+#         pitallminus=self.pitallfun(tauL,qprtls)
+#         taunew=10**(np.log10(tauL+1)+0.1/2)
+#         wnt=self.ESSfun(taunew,qprtls,pitallminus)
+#         wnt_all=self.comm.gather(wnt,root=0)
+#         if self.myrank==0:
+#             wnt_all=np.hstack(wnt_all)
+#             ESS=(np.sum(wnt_all))**2/(np.sum(wnt_all**2)+1e-16)
+#         else:
+#             ESS=None
+#         ESS=self.comm.bcast(ESS,root=0)
+#         return taunew,wnt,ESS/self.nsamples
 
 #-------------------------------------------
 
