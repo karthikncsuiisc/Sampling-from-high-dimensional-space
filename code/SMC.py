@@ -103,7 +103,6 @@ class SMC(BaseClass):
                 W=W*wnt_all;    W=W/np.sum(W)
                 qprtls,W=self.resampling(qprtls,W)
                 Var,VarR=self.calSMCvar(qprtls,W,Var,VarR)
-                print("tau:",tau)
             else:
                 Var=None; VarR=None
 
@@ -122,11 +121,6 @@ class SMC(BaseClass):
                 allaccepts_qs=np.asarray(allaccepts_qs)
                 allaccepts_qs=self.comm.gather(allaccepts_qs,root=0)
 
-                if self.myrank==0:
-                    allaccepts_qs=np.vstack(allaccepts_qs)
-                    EFF_prtls=np.unique(allaccepts_qs,axis=0).shape[0]
-                else:
-                    EFF_prtls=1
             else:
                 for i in range(0,qprtls_div.shape[1]):
                     # qprtls[:,i],iaccept,allaccepts_dum=self.SMCRW(tau,qprtls[:,i],Var,VarR)
@@ -142,7 +136,7 @@ class SMC(BaseClass):
                 pbar.update(count-countold)
                 countold=copy.deepcopy(count)
             
-            if tcount>20:
+            if tcount>500:
                 print("Number of iterations are more than ",tcount)
 
                 for i in range(0,qprtls_div.shape[1]):
@@ -153,18 +147,14 @@ class SMC(BaseClass):
                 allaccepts_qs=np.asarray(allaccepts_qs)
                 allaccepts_qs=self.comm.gather(allaccepts_qs,root=0)
 
-                if self.myrank==0:
-                    allaccepts_qs=np.vstack(allaccepts_qs)
-                    EFF_prtls=np.unique(allaccepts_qs,axis=0).shape[0]
-                else:
-                    EFF_prtls=1
-
                 break
         
         if self.myrank==0:
-            print("Number of iterations:",tcount)
-            comp_time=time.time()-start_time
-            print("Computational time for SMC sampling:",comp_time)
+            allaccepts_qs=np.vstack(allaccepts_qs)
+            allaccepts_qs=np.unique(allaccepts_qs,axis=0)
+            EFF_prtls=np.unique(allaccepts_qs,axis=0).shape[0]
+        else:
+            EFF_prtls=1
 
 
         ntot=(self.nsamples*self.NSMC_MCMC)*tcount
@@ -189,6 +179,22 @@ class SMC(BaseClass):
             tau: returns
         """
 
+#------------------------manual tau
+        pitallminus=self.pitallfun(tauL,qprtls)
+        taunew=10**(np.log10(tauL+1e-16)+0.1)
+        print(taunew)
+        wnt=self.ESSfun(taunew,qprtls,pitallminus)
+        wnt_all=self.comm.gather(wnt,root=0)
+        if self.myrank==0:
+            wnt_all=np.hstack(wnt_all)
+            ESS=(np.sum(wnt_all))**2/(np.sum(wnt_all**2)+1e-16)
+        else:
+            ESS=None
+        ESS=self.comm.bcast(ESS,root=0)
+        return taunew,wnt,ESS/self.nsamples
+
+#-------------------------------------------
+
         pitallminus=self.pitallfun(tauL,qprtls)
         funL=1.0-self.ESSfract
         wnt=self.ESSfun(tauU,qprtls,pitallminus)
@@ -211,7 +217,6 @@ class SMC(BaseClass):
 
             taunew=tauL+fact*deltatau
             wnt=self.ESSfun(taunew,qprtls,pitallminus)
-
             wnt_all=self.comm.gather(wnt,root=0)
             if self.myrank==0:
                 wnt_all=np.hstack(wnt_all)

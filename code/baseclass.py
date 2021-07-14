@@ -55,14 +55,29 @@ class BaseClass:
 
         return dum_mindist
 
+    def maxdist(self,qsamples):
+        from scipy.spatial.distance import cdist
+
+        qsamples_set=[]
+        for i in range(0,qsamples.shape[0]):
+            qsamples_set.append(tuple(qsamples[i,:]))
+        
+        dum_maxdist=cdist(qsamples_set,qsamples_set)
+        dum_maxdist=np.max(np.sort(dum_maxdist,axis=1)[:,-1])
+
+        return dum_maxdist
+
     def printoutput(self,qsamples,ntot,neff,accpt_ratio,size=1,comp_time=1):
         
         """
         Function to call the sampling method of choice and plot results
         """
 
+        qsamples=np.unique(qsamples,axis=0)
+
         dum_mindist=self.mindist(qsamples)
-        comp_array=np.array([[size,comp_time,dum_mindist]])
+        dum_maxdist=self.maxdist(qsamples)
+        comp_array=np.array([[size,comp_time,dum_mindist,dum_maxdist]])
         np.savetxt("../results/comp_time.log",comp_array)
 
         if self.printoutput:
@@ -71,6 +86,7 @@ class BaseClass:
             print('Acceptance ratio:',accpt_ratio)
             print("Computational time:",comp_time)
             print("Min. distance:",dum_mindist)
+            print("Max. distance:",dum_maxdist)
 
         self.testsamples(qsamples)
 

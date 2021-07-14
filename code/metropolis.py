@@ -44,6 +44,7 @@ class Metropolis(BaseClass):
         Function to call the sampling method of choice and plot results
         """
 
+        start_time=time.time()
         if self.method=="Metropolis":
             print("Sampling using random walk metropolis")
             qsamples,ntot,naccept=self.RandomWalk()
@@ -56,14 +57,19 @@ class Metropolis(BaseClass):
         else:
             print("Wrong choice of method for sampler algorithm")
             sys.exit(1)
+        comp_time=time.time()-start_time
         
+        ntot_all=self.comm.gather(ntot,root=0)
+        naccept_all=self.comm.gather(naccept,root=0)
         qsamples_all=self.comm.gather(qsamples,root=0)
         if self.myrank==0:
             qsamples_all=np.vstack(qsamples_all)
-        
-            super(Metropolis, self).printoutput(qsamples,ntot,naccept,naccept/ntot)
-            super(Metropolis, self).plotsamples(qsamples,self.method)
-            super(Metropolis, self).savesamples(qsamples,self.method)
+            ntot_all=np.sum(ntot_all)
+            naccept_all=np.sum(naccept_all)
+                   
+            super(Metropolis, self).printoutput(qsamples_all,ntot_all,naccept_all,naccept_all/ntot_all,self.size,comp_time)
+            super(Metropolis, self).plotsamples(qsamples_all,self.method)
+            super(Metropolis, self).savesamples(qsamples_all,self.method)
 
         return naccept,naccept/ntot
 
@@ -165,7 +171,6 @@ class Metropolis(BaseClass):
             Q_MCMC: Accepted samples
         """
 
-        print(self.myrank)
         print("adaption interval:",self.adapt_interval)
         R = np.linalg.cholesky(self.Vstart);
         Vold=copy.deepcopy(self.Vstart)
@@ -184,7 +189,11 @@ class Metropolis(BaseClass):
 
             ind=np.random.randint(q_old.shape[0],size=1)
             q_new=copy.deepcopy(q_old)
-            q_new[ind,0]=q_old[ind,0]+np.sqrt(self.Vstart[ind,ind])*np.random.randn()
+            try:
+                q_new[ind,0]=q_old[ind,0]+np.sqrt(self.Vstart[ind,ind])*np.random.randn()
+            except:
+                print(iaccept,self.Vstart)
+
             output=self.objF(q_new[:,0])
 
             if output:

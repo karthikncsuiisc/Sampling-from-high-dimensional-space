@@ -44,16 +44,15 @@ if __name__ == '__main__':
         sampling.sample()
 
     elif method=="Metropolis" or method=="AdaptiveMetropolis" or method=="Gibbs":
-        if myrank==0:
-            sampling=Metropolis(model=constrains,
-                            qstart=constrains.get_example(),
-                            qlims=qlims,
-                            nsamples=int(n_results),
-                            output_file=output_file,
-                            method=method,
-                            plotfigures=True,
-                            saveoutputfile=True)
-            sampling.sample()
+        sampling=Metropolis(model=constrains,
+                        qstart=constrains.get_example(),
+                        qlims=qlims,
+                        nsamples=int(n_results),
+                        output_file=output_file,
+                        method=method,
+                        plotfigures=True,
+                        saveoutputfile=True)
+        sampling.sample()
 
     else:
         if myrank==0:
