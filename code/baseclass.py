@@ -24,6 +24,7 @@ class BaseClass:
         method: Choice of method for sampling
         output_file: File name to save the samples
         """
+
         self.model=model
         self.qstart=np.reshape(np.asarray(qstart),(-1,1))
         self.qlims=qlims
@@ -41,17 +42,36 @@ class BaseClass:
         os.chdir("code")
         self.outputpath="../"+outputpath+"/"
         self.output_file=self.outputpath+output_file
+    
+    def mindist(self,qsamples):
+        from scipy.spatial.distance import cdist
 
-    def printoutput(self,qsamples,ntot,neff,accpt_ratio):
+        qsamples_set=[]
+        for i in range(0,qsamples.shape[0]):
+            qsamples_set.append(tuple(qsamples[i,:]))
+        
+        dum_mindist=cdist(qsamples_set,qsamples_set)
+        dum_mindist=np.min(np.sort(dum_mindist,axis=1)[:,1])
+
+        return dum_mindist
+
+    def printoutput(self,qsamples,ntot,neff,accpt_ratio,size=1,comp_time=1):
         
         """
         Function to call the sampling method of choice and plot results
         """
+
+        dum_mindist=self.mindist(qsamples)
+        comp_array=np.array([[size,comp_time,dum_mindist]])
+        np.savetxt("../results/comp_time.log",comp_array)
+
         if self.printoutput:
             print("Total generated samples:",ntot)
             print("Total effective samples:",int(neff))
             print('Acceptance ratio:',accpt_ratio)
-        
+            print("Computational time:",comp_time)
+            print("Min. distance:",dum_mindist)
+
         self.testsamples(qsamples)
 
     def testsamples(self,qsamples):

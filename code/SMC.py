@@ -50,10 +50,13 @@ class SMC(BaseClass):
         """
         if self.myrank==0:
             print("Sampling using sequential monte carlo")
+        
+        start_time=time.time()
         qsamples,ntot,naccept=self.SMCsampler()
+        comp_time=time.time()-start_time
 
         if self.myrank==0:
-            super(SMC, self).printoutput(qsamples,ntot,naccept,naccept/ntot)
+            super(SMC, self).printoutput(qsamples,ntot,naccept,naccept/ntot,self.size,comp_time)
             super(SMC, self).plotsamples(qsamples,self.method)
             super(SMC, self).savesamples(qsamples,self.method)
 
@@ -78,11 +81,13 @@ class SMC(BaseClass):
             VarR=copy.deepcopy(Var)
             W=np.ones(self.nsamples)*1/self.nsamples
 
-            pbar = tqdm(total = 100)
+            pbar = tqdm(total = 1000)
             count=0
             countold=0
         else:
             qprtls=None
+
+        start_time=time.time()
 
         while tau < self.tauThres:
 
@@ -98,6 +103,7 @@ class SMC(BaseClass):
                 W=W*wnt_all;    W=W/np.sum(W)
                 qprtls,W=self.resampling(qprtls,W)
                 Var,VarR=self.calSMCvar(qprtls,W,Var,VarR)
+                print("tau:",tau)
             else:
                 Var=None; VarR=None
 
@@ -132,9 +138,34 @@ class SMC(BaseClass):
                 qprtls=np.hstack(qprtls)
 
             if self.myrank==0:            
-                count=np.abs(int(np.log10(tau)*100/6))
+                count=np.abs(int(np.log10(tau)*1000/6))
                 pbar.update(count-countold)
                 countold=copy.deepcopy(count)
+            
+            if tcount>20:
+                print("Number of iterations are more than ",tcount)
+
+                for i in range(0,qprtls_div.shape[1]):
+                    # qprtls[:,i],iaccept,allaccepts_dum=self.SMCRW(tau,qprtls[:,i],Var,VarR)
+                    qprtls_div[:,i],iaccept,allaccepts_dum=self.GibbsSampler(tau,qprtls_div[:,i],Var,VarR)
+                    iacceptall=iacceptall+iaccept
+                    allaccepts_qs=allaccepts_qs+allaccepts_dum
+                allaccepts_qs=np.asarray(allaccepts_qs)
+                allaccepts_qs=self.comm.gather(allaccepts_qs,root=0)
+
+                if self.myrank==0:
+                    allaccepts_qs=np.vstack(allaccepts_qs)
+                    EFF_prtls=np.unique(allaccepts_qs,axis=0).shape[0]
+                else:
+                    EFF_prtls=1
+
+                break
+        
+        if self.myrank==0:
+            print("Number of iterations:",tcount)
+            comp_time=time.time()-start_time
+            print("Computational time for SMC sampling:",comp_time)
+
 
         ntot=(self.nsamples*self.NSMC_MCMC)*tcount
         return allaccepts_qs,ntot,EFF_prtls
@@ -150,7 +181,7 @@ class SMC(BaseClass):
         
         return partitions
 
-    def find_tau(self,qprtls,tauL,tauU,deltatau=1.0,Niter=100):        
+    def find_tau(self,qprtls,tauL,tauU,deltatau=100.0,Niter=100):        
         """
         Function to find tau using ESS
 
@@ -200,8 +231,7 @@ class SMC(BaseClass):
                 funL=copy.deepcopy(funnew)
             
             if np.abs(funnew)<1e-3:
-                break
-        
+                break        
 
         return taunew,wnt,ESS/self.nsamples
     
@@ -336,7 +366,9 @@ class SMC(BaseClass):
         accepted_qs=[qval[:,0]]
 
         qindG=np.random.randint(qval.shape[0],size=self.NSMC_MCMC)
+
         for ind in qindG:
+            # print(ind)
             qnew=copy.deepcopy(qval)
             qnew[ind,0]=qval[ind,0]+np.sqrt(Var[ind,ind])*np.random.randn()
 

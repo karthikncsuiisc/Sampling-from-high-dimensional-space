@@ -5,6 +5,7 @@ from metropolis import Metropolis
 from SMC import SMC
 import time
 from mpi4py import MPI
+from scipy.spatial.distance import cdist
 
 if __name__ == '__main__':
 
@@ -30,7 +31,7 @@ if __name__ == '__main__':
     constrains=Constraint(input_file)
     qstart=constrains.get_example()
     qlims=np.zeros((len(qstart),2))
-    qlims[:,1]=1.0
+    qlims[:,1]=1.0 
 
     if method=="SMC":
         sampling=SMC(model=constrains,

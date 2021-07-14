@@ -9,6 +9,7 @@ import time
 import seaborn as sns
 import pandas as pd
 from baseclass import BaseClass
+from mpi4py import MPI
 
 class Metropolis(BaseClass):
     """Class for different sampling algorithms"""
@@ -34,10 +35,15 @@ class Metropolis(BaseClass):
         self.adapt_interval=adapt_interval
         self.method=method
 
+        self.comm = MPI.COMM_WORLD
+        self.myrank = self.comm.Get_rank()
+        self.size=self.comm.size
+
     def sample(self):
         """
         Function to call the sampling method of choice and plot results
         """
+
         if self.method=="Metropolis":
             print("Sampling using random walk metropolis")
             qsamples,ntot,naccept=self.RandomWalk()
@@ -51,11 +57,13 @@ class Metropolis(BaseClass):
             print("Wrong choice of method for sampler algorithm")
             sys.exit(1)
         
-        print(type(qsamples))
+        qsamples_all=self.comm.gather(qsamples,root=0)
+        if self.myrank==0:
+            qsamples_all=np.vstack(qsamples_all)
         
-        super(Metropolis, self).printoutput(qsamples,ntot,naccept,naccept/ntot)
-        super(Metropolis, self).plotsamples(qsamples,self.method)
-        super(Metropolis, self).savesamples(qsamples,self.method)
+            super(Metropolis, self).printoutput(qsamples,ntot,naccept,naccept/ntot)
+            super(Metropolis, self).plotsamples(qsamples,self.method)
+            super(Metropolis, self).savesamples(qsamples,self.method)
 
         return naccept,naccept/ntot
 
@@ -156,6 +164,8 @@ class Metropolis(BaseClass):
         Return:
             Q_MCMC: Accepted samples
         """
+
+        print(self.myrank)
         print("adaption interval:",self.adapt_interval)
         R = np.linalg.cholesky(self.Vstart);
         Vold=copy.deepcopy(self.Vstart)

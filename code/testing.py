@@ -13,7 +13,6 @@ if __name__ == '__main__':
     fout=open("../results/testing_results.txt","w")
     fout.write("%s %s %s %s %s %s %s\n"%(allsave[0].center(20,' '),allsave[1].center(20,' '),allsave[2].center(20,' '),
         allsave[3].center(20,' '),allsave[4].center(20,' '),allsave[5].center(20,' '),allsave[6].center(20,' ')))
-    fout.write("----------------------------------------------------------------------------------------------------------------------------------------------\n")
 
     for filename in testing_files:
         for method in ["SMC","AdaptiveMetropolis","Metropolis","Gibbs"]:
