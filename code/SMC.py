@@ -134,7 +134,7 @@ class SMC(BaseClass):
                 pbar.update(count-countold)
                 countold=copy.deepcopy(count)
             
-            if tcount>5000:
+            if tcount>200:
                 print("Number of iterations are more than ",tcount)
 
                 for i in range(0,qprtls_div.shape[1]):
